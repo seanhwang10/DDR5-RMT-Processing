@@ -24,10 +24,10 @@ def processData(folders, vendorNames, bootstrap, includeLine):
         allRankMarginCPU0[i], allLaneMarginCPU0[i], allRankMarginCPU1[i], allLaneMarginCPU1[i], variableList = readData(os.listdir(folders[i]), folders[i])
 
     makeGraphs(allRankMarginCPU0, variableList, vendorNames, includeLine, bootstrap, "CPU0 Rank Margin")
-    makeGraphs(allLaneMarginCPU0, variableList, vendorNames, includeLine, bootstrap, "CPU0 Lane Margin")
+    # makeGraphs(allLaneMarginCPU0, variableList, vendorNames, includeLine, bootstrap, "CPU0 Lane Margin")
     
-    makeGraphs(allRankMarginCPU1, variableList, vendorNames, includeLine, bootstrap, "CPU1 Rank Margin")
-    makeGraphs(allLaneMarginCPU1, variableList, vendorNames, includeLine, bootstrap, "CPU1 Lane Margin")
+    # makeGraphs(allRankMarginCPU1, variableList, vendorNames, includeLine, bootstrap, "CPU1 Rank Margin")
+    # makeGraphs(allLaneMarginCPU1, variableList, vendorNames, includeLine, bootstrap, "CPU1 Lane Margin")
 
     plt.show()
 
@@ -147,7 +147,7 @@ def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap,
 
     boxFig.savefig(marginType.replace(" ", "") + "BoxPlot.pdf")
     bitMargFig.savefig(marginType.replace(" ", "") + "BitMargin.pdf")
-    tableFig.savefig(marginType.replace(" ", "") + "VarTable.pdf")
+    tableFig.savefig(marginType.replace(" ", "") + "VarTable.pdf", bbox_inches='tight')
 
 
 def createCSVFile(fileName, variableList, rankMarginData):
