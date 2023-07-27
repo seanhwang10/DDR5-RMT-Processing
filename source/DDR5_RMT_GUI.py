@@ -5,9 +5,14 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 
+from DDR5_RMT_Processing import *
+
 def jean_analysis():
-    numData = num_data_var.get()
-    folders = folder_path_var.get()
+    numData = int(num_data_var.get())
+    folders = []
+    for i in range(0, numData):
+        folders.append(folder_path_var.get())
+        # folders = folder_path_var.get()
     bootstrap = "Y" if bootstrap_var.get() else "N"
     includeLine = "Y" if include_line_var.get() else "N"
 
@@ -17,12 +22,19 @@ def jean_analysis():
     print("Number of folders to analyze:", numData)
     print("Path to folder:", folders)
     print("Bootstrap?", bootstrap)
-    print("VM Line?", includeLine)
+    print("Margin Line?", includeLine)
 
 
     # ---- Your code should begin here ----------------------------------------------------------- #
 
+    vendorNames = []
+    for i in range(0, numData):
+        name = folders[i][folders[i].rfind("/")+1:folders[i].rfind("_")]
+        name = name[name.find("_")+1:name.rfind("_")]
+        name = name[name.find("_")+1:]
+        vendorNames.append(name)
 
+    processData(folders, vendorNames, bootstrap, includeLine)
 
 
 
