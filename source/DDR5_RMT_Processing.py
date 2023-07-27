@@ -99,7 +99,7 @@ def separateMarginData(data, variableList, filePath, marginType):
 
 def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap, marginType):
     boxFig, boxAxs = plt.subplots(2, 4)
-    bitMargFig, bitMargAxs = plt.subplots(2, 4)
+    # bitMargFig, bitMargAxs = plt.subplots(2, 4)
     tableFig, tableAxs = plt.subplots(2, 4)
 
     allMean = []
@@ -110,21 +110,10 @@ def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap,
     allMeanSD2 = []
     allMeanSD3 = []
 
-    for i in range(0, len(vendorNames)):
-        histFig, histAxs = plt.subplots(2, 4)
-
-        for j in range(1, 9):
-            makeHistogram(allMarginList[i], variableList[j - 1], j, histAxs, includeLine, bootstrap)
-
-        histFig.subplots_adjust(top=0.9, bottom=0.18, wspace=0.3, hspace=0.75)
-        histFig.suptitle(vendorNames[i] + " " + marginType)
-        histFig.savefig(vendorNames[i] + marginType.replace(" ", "") + "Histogram.pdf")
-
-
     for i in range(1, 9):
         columns, x, y, mean, median, sd, iqr, meanSD1, meanSD2, meanSD3 = calculateStats(allMarginList, i, bootstrap)
         makeBoxPlot(columns, vendorNames, variableList[i - 1], boxAxs[x, y], includeLine)
-        makeBitMargin(columns, vendorNames, variableList[i - 1], bitMargAxs[x, y], includeLine)
+        # makeBitMargin(columns, vendorNames, variableList[i - 1], bitMargAxs[x, y], includeLine)
         makeVarTable(mean, median, sd, iqr, meanSD1, meanSD2, meanSD3, vendorNames, variableList[i-1], tableAxs[x, y])
 
         allMean.append(mean)
@@ -135,18 +124,35 @@ def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap,
         allMeanSD2.append(meanSD2)
         allMeanSD3.append(meanSD3)
 
+    for i in range(0, len(vendorNames)):
+        histFig, histAxs = plt.subplots(2, 4)
+        bitMargFig, bitMargAxs = plt.subplots(2, 4)
+
+        for j in range(1, 9):
+            makeHistogram(allMarginList[i], variableList[j - 1], j, histAxs, includeLine, bootstrap)
+            makeBitMargin(allMarginList[i], variableList[j - 1], j, bitMargAxs, includeLine)
+
+        histFig.subplots_adjust(top=0.9, bottom=0.18, wspace=0.3, hspace=0.75)
+        bitMargFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.3, hspace=0.3)
+
+        histFig.suptitle(vendorNames[i] + " " + marginType)
+        bitMargFig.suptitle(vendorNames[i] + " " + marginType)
+
+        histFig.savefig(vendorNames[i] + marginType.replace(" ", "") + "Histogram.pdf")
+        bitMargFig.savefig(vendorNames[i] + marginType.replace(" ", "") + "BitMargin.pdf")
+
     boxFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.3, hspace=0.3)
-    bitMargFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.3, hspace=0.3)
+    # bitMargFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.3, hspace=0.3)
     tableFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.63)
 
     boxFig.suptitle(marginType)
-    bitMargFig.suptitle(marginType)
+    # bitMargFig.suptitle(marginType)
     tableFig.suptitle(marginType)
 
     makeTable(variableList, vendorNames, allMean, allMedian, allSD, allIQR, allMeanSD1, allMeanSD2, allMeanSD3, marginType)
 
     boxFig.savefig(marginType.replace(" ", "") + "BoxPlot.pdf")
-    bitMargFig.savefig(marginType.replace(" ", "") + "BitMargin.pdf")
+    # bitMargFig.savefig(marginType.replace(" ", "") + "BitMargin.pdf")
     tableFig.savefig(marginType.replace(" ", "") + "VarTable.pdf", bbox_inches='tight')
 
 
@@ -167,17 +173,30 @@ def makeVarTable(mean, median, sd, iqr, meanSD1, meanSD2, meanSD3, vendorNames, 
     axs.table(cellText=[mean, median, sd, iqr, meanSD1, meanSD2, meanSD3], rowLabels=row, colLabels=vendorNames, loc='center')
     axs.set_title(variable)
 
-def makeBitMargin(columns, vendorNames, variable, axs, includeLine):
-    for i in range(0, len(columns)):
-        axs.scatter(range(0, len(columns[i])), columns[i], label=vendorNames[i], alpha=0.5)
+def makeBitMargin(rankMarginList, variable, graphNum, axs, includeLine):
+    x = 0
+    y = graphNum - 1
+    if graphNum > 4:
+        x = 1
+        y = (graphNum - 1) % 4
 
-    axs.legend(fontsize='5', loc='upper left')
-    axs.set_title(variable)
+    # for i in range(0, len(columns)):
+    #     axs.scatter(range(0, len(columns[i])), columns[i], label=vendorNames[i], alpha=0.5)
+    
+    columns = []
+    for i in range(0, len(rankMarginList)):
+        columns.append(abs(int(rankMarginList[i][graphNum])))
+
+    axs[x, y].scatter(range(0, len(columns)), columns, alpha=0.5)
+
+    # axs.legend(fontsize='5', loc='upper left')
+    axs[x, y].tick_params(axis='both', which='major', labelsize=5)
+    axs[x, y].set_title(variable)
 
     if includeLine == "Y":
-        axs.axhline(y=6, linestyle='dotted')
+        axs[x, y].axhline(y=6, linestyle='dotted')
 
-    axs.plot()
+    axs[x, y].plot()
 
 
 def makeBoxPlot(columns, vendorNames, variable, axs, includeLine):
