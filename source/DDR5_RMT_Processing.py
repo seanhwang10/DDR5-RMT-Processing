@@ -138,7 +138,7 @@ def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap,
             boxFig.savefig(marginType.replace(" ", "") + "BoxPlot.pdf")
 
         if varTable:
-            tableFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.63)
+            tableFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.3)
             tableFig.suptitle(marginType)
             tableFig.savefig(marginType.replace(" ", "") + "VarTable.pdf", bbox_inches='tight')
 
