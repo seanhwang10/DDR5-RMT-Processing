@@ -17,13 +17,13 @@ import csv
 from sklearn.utils import resample
 
 
-def processData(folders, vendorNames, bootstrap, includeLine):
+def processData(folders, vendorNames, bootstrap, includeLine, histogram, vendorTable, boxPlot, varTable, bitMarg):
     allRankMarginCPU0, allLaneMarginCPU0 = [None] * len(folders), [None] * len(folders)
     allRankMarginCPU1, allLaneMarginCPU1, variableList = [None] * len(folders), [None] * len(folders), [None] * len(folders)
     for i in range(0, len(folders)):
         allRankMarginCPU0[i], allLaneMarginCPU0[i], allRankMarginCPU1[i], allLaneMarginCPU1[i], variableList = readData(os.listdir(folders[i]), folders[i])
 
-    makeGraphs(allRankMarginCPU0, variableList, vendorNames, includeLine, bootstrap, "CPU0 Rank Margin")
+    makeGraphs(allRankMarginCPU0, variableList, vendorNames, includeLine, bootstrap, "CPU0 Rank Margin", histogram, vendorTable, boxPlot, varTable, bitMarg)
     # makeGraphs(allLaneMarginCPU0, variableList, vendorNames, includeLine, bootstrap, "CPU0 Lane Margin")
     
     # makeGraphs(allRankMarginCPU1, variableList, vendorNames, includeLine, bootstrap, "CPU1 Rank Margin")
@@ -97,10 +97,13 @@ def separateMarginData(data, variableList, filePath, marginType):
     return data
 
 
-def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap, marginType):
-    boxFig, boxAxs = plt.subplots(2, 4)
+def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap, marginType, histogram, vendorTable, boxPlot, varTable, bitMarg):
+    if boxPlot:
+        boxFig, boxAxs = plt.subplots(2, 4)
     # bitMargFig, bitMargAxs = plt.subplots(2, 4)
-    tableFig, tableAxs = plt.subplots(2, 4)
+
+    if varTable:
+        tableFig, tableAxs = plt.subplots(2, 4)
 
     allMean = []
     allMedian = []
@@ -110,50 +113,73 @@ def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap,
     allMeanSD2 = []
     allMeanSD3 = []
 
-    for i in range(1, 9):
-        columns, x, y, mean, median, sd, iqr, meanSD1, meanSD2, meanSD3 = calculateStats(allMarginList, i, bootstrap)
-        makeBoxPlot(columns, vendorNames, variableList[i - 1], boxAxs[x, y], includeLine)
-        # makeBitMargin(columns, vendorNames, variableList[i - 1], bitMargAxs[x, y], includeLine)
-        makeVarTable(mean, median, sd, iqr, meanSD1, meanSD2, meanSD3, vendorNames, variableList[i-1], tableAxs[x, y])
+    if boxPlot or varTable or vendorTable:
+        for i in range(1, 9):
+            columns, x, y, mean, median, sd, iqr, meanSD1, meanSD2, meanSD3 = calculateStats(allMarginList, i, bootstrap)
 
-        allMean.append(mean)
-        allMedian.append(median)
-        allSD.append(sd)
-        allIQR.append(iqr)
-        allMeanSD1.append(meanSD1)
-        allMeanSD2.append(meanSD2)
-        allMeanSD3.append(meanSD3)
+            if boxPlot:
+                makeBoxPlot(columns, vendorNames, variableList[i - 1], boxAxs[x, y], includeLine)
+            # makeBitMargin(columns, vendorNames, variableList[i - 1], bitMargAxs[x, y], includeLine)
+            if varTable:
+                makeVarTable(mean, median, sd, iqr, meanSD1, meanSD2, meanSD3, vendorNames, variableList[i-1], tableAxs[x, y])
 
-    for i in range(0, len(vendorNames)):
-        histFig, histAxs = plt.subplots(2, 4)
-        bitMargFig, bitMargAxs = plt.subplots(2, 4)
+            if vendorTable:
+                allMean.append(mean)
+                allMedian.append(median)
+                allSD.append(sd)
+                allIQR.append(iqr)
+                allMeanSD1.append(meanSD1)
+                allMeanSD2.append(meanSD2)
+                allMeanSD3.append(meanSD3)
 
-        for j in range(1, 9):
-            makeHistogram(allMarginList[i], variableList[j - 1], j, histAxs, includeLine, bootstrap)
-            makeBitMargin(allMarginList[i], variableList[j - 1], j, bitMargAxs, includeLine)
+        if boxPlot:
+            boxFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.3, hspace=0.3)
+            boxFig.suptitle(marginType)
+            boxFig.savefig(marginType.replace(" ", "") + "BoxPlot.pdf")
 
-        histFig.subplots_adjust(top=0.9, bottom=0.18, wspace=0.3, hspace=0.75)
-        bitMargFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.3, hspace=0.3)
+        if varTable:
+            tableFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.63)
+            tableFig.suptitle(marginType)
+            tableFig.savefig(marginType.replace(" ", "") + "VarTable.pdf", bbox_inches='tight')
 
-        histFig.suptitle(vendorNames[i] + " " + marginType)
-        bitMargFig.suptitle(vendorNames[i] + " " + marginType)
+        if vendorTable:
+            makeTable(variableList, vendorNames, allMean, allMedian, allSD, allIQR, allMeanSD1, allMeanSD2, allMeanSD3, marginType)
 
-        histFig.savefig(vendorNames[i] + marginType.replace(" ", "") + "Histogram.pdf")
-        bitMargFig.savefig(vendorNames[i] + marginType.replace(" ", "") + "BitMargin.pdf")
+    if histogram or bitMarg:
+        for i in range(0, len(vendorNames)):
+            if histogram:
+                histFig, histAxs = plt.subplots(2, 4)
 
-    boxFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.3, hspace=0.3)
+            if bitMarg:
+                bitMargFig, bitMargAxs = plt.subplots(2, 4)
+
+            for j in range(1, 9):
+                if histogram:
+                    makeHistogram(allMarginList[i], variableList[j - 1], j, histAxs, includeLine, bootstrap)
+                if bitMarg:
+                    makeBitMargin(allMarginList[i], variableList[j - 1], j, bitMargAxs, includeLine)
+
+            if histogram:
+                histFig.subplots_adjust(top=0.9, bottom=0.18, wspace=0.3, hspace=0.75)
+                histFig.suptitle(vendorNames[i] + " " + marginType)
+                histFig.savefig(vendorNames[i] + marginType.replace(" ", "") + "Histogram.pdf")
+
+            if bitMarg:
+                bitMargFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.3, hspace=0.3)
+                bitMargFig.suptitle(vendorNames[i] + " " + marginType)
+                bitMargFig.savefig(vendorNames[i] + marginType.replace(" ", "") + "BitMargin.pdf")
+
+    # boxFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.3, hspace=0.3)
     # bitMargFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.3, hspace=0.3)
-    tableFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.63)
+    # tableFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.63)
 
-    boxFig.suptitle(marginType)
+    # boxFig.suptitle(marginType)
     # bitMargFig.suptitle(marginType)
-    tableFig.suptitle(marginType)
-
-    makeTable(variableList, vendorNames, allMean, allMedian, allSD, allIQR, allMeanSD1, allMeanSD2, allMeanSD3, marginType)
-
-    boxFig.savefig(marginType.replace(" ", "") + "BoxPlot.pdf")
+    # tableFig.suptitle(marginType)
+    
+    # boxFig.savefig(marginType.replace(" ", "") + "BoxPlot.pdf")
     # bitMargFig.savefig(marginType.replace(" ", "") + "BitMargin.pdf")
-    tableFig.savefig(marginType.replace(" ", "") + "VarTable.pdf", bbox_inches='tight')
+    # tableFig.savefig(marginType.replace(" ", "") + "VarTable.pdf", bbox_inches='tight')
 
 
 def createCSVFile(fileName, variableList, rankMarginData):

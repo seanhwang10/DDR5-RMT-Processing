@@ -16,6 +16,11 @@ def jean_analysis():
     # askBooleanInput(numData + 1)
     bootstrap = "Y" if bootstrap_var.get() else "N"
     includeLine = "Y" if include_line_var.get() else "N"
+    histogram = histogram_var.get()
+    vendor_table = vendor_table_var.get()
+    box_plot = box_plot_var.get()
+    variable_table = variable_table_var.get()
+    bit_margin = bit_margin_var.get()
 
     # All inputs saved into variables named above, ready to be used.
 
@@ -34,7 +39,7 @@ def jean_analysis():
         name = name[name.find("_")+1:]
         vendorNames.append(name)
 
-    processData(folders, vendorNames, bootstrap, includeLine)
+    processData(folders, vendorNames, bootstrap, includeLine, histogram, vendor_table, box_plot, variable_table, bit_margin)
 
 
 
@@ -62,6 +67,12 @@ num_data_var = tk.StringVar()
 folder_path_var = tk.StringVar()
 bootstrap_var = tk.BooleanVar()
 include_line_var = tk.BooleanVar()
+histogram_var = tk.BooleanVar()
+vendor_table_var = tk.BooleanVar()
+box_plot_var = tk.BooleanVar()
+variable_table_var = tk.BooleanVar()
+bit_margin_var = tk.BooleanVar()
+
 
 num_label = tk.Label(root, text="Number of folders to analyze:")                                # numData
 num_label.grid(row=0, column=0, padx=10, pady=5)
@@ -89,8 +100,26 @@ include_line_yes_radio.grid(row=2, column=1, padx=10, pady=5)
 include_line_no_radio = tk.Radiobutton(root, text="No", variable=include_line_var, value=False)
 include_line_no_radio.grid(row=2, column=2, padx=10, pady=5)
 
+graph_types_label = tk.Label(root, text="Select Graph Type:")                                           
+graph_types_label.grid(row=3, column=0, padx=9, pady=5)
+
+histogram_radio = tk.Radiobutton(root, text="Histogram", variable=histogram_var, value=True)
+histogram_radio.grid(row=3, column=1, padx=9, pady=5)
+
+vendor_table_radio = tk.Radiobutton(root, text="Vendor Table", variable=vendor_table_var, value=True)
+vendor_table_radio.grid(row=3, column=2, padx=9, pady=5)
+
+box_plot_radio = tk.Radiobutton(root, text="Box Plot", variable=box_plot_var, value=True)
+box_plot_radio.grid(row=4, column=0, padx=10, pady=3)
+
+variable_table_radio = tk.Radiobutton(root, text="Variable Table", variable=variable_table_var, value=True)
+variable_table_radio.grid(row=4, column=1, padx=10, pady=3)
+
+bit_margin_radio = tk.Radiobutton(root, text="Bit Margin", variable=bit_margin_var, value=True)
+bit_margin_radio.grid(row=4, column=2, padx=10, pady=3)
+
 run_button = tk.Button(root, text="Run", command=jean_analysis, width=20)
-run_button.grid(row=3, column=0, columnspan=3, padx=10, pady=20)
+run_button.grid(row=5, column=0, columnspan=3, padx=10, pady=5)
 
 
 
