@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import statistics as stats
 import csv
 from sklearn.utils import resample
+import openpyxl
 
 
 def processData(folders, vendorNames, bootstrap, includeLine, histogram, vendorTable, boxPlot, varTable, bitMarg):
@@ -23,8 +24,9 @@ def processData(folders, vendorNames, bootstrap, includeLine, histogram, vendorT
     for i in range(0, len(folders)):
         allRankMarginCPU0[i], allLaneMarginCPU0[i], allRankMarginCPU1[i], allLaneMarginCPU1[i], variableList = readData(os.listdir(folders[i]), folders[i])
 
+    # print(allRankMarginCPU0)
     makeGraphs(allRankMarginCPU0, variableList, vendorNames, includeLine, bootstrap, "CPU0 Rank Margin", histogram, vendorTable, boxPlot, varTable, bitMarg)
-    # makeGraphs(allLaneMarginCPU0, variableList, vendorNames, includeLine, bootstrap, "CPU0 Lane Margin")
+    makeGraphs(allLaneMarginCPU0, variableList, vendorNames, includeLine, bootstrap, "CPU0 Lane Margin", histogram, vendorTable, boxPlot, varTable, bitMarg)
     
     # makeGraphs(allRankMarginCPU1, variableList, vendorNames, includeLine, bootstrap, "CPU1 Rank Margin")
     # makeGraphs(allLaneMarginCPU1, variableList, vendorNames, includeLine, bootstrap, "CPU1 Lane Margin")
@@ -74,7 +76,6 @@ def readData(folder, folderPath):
 
     return allRankMarginCPU0, allLaneMarginCPU0, allRankMarginCPU1, allLaneMarginCPU1, variableListCPU0
 
-
 def separateCPU(data, filePath, cpuNum):
     rankMargin = data[data.find("Rank Margin"):data.find("Lane Margin")]
     laneMargin = data[data.find("Lane Margin"):data.find("CA Lane Margin")]
@@ -82,8 +83,8 @@ def separateCPU(data, filePath, cpuNum):
     variableList = rankMargin[rankMargin.find("RxDqs-"):rankMargin.find("\nN" + cpuNum)]
     variableList = list(filter(None, variableList.split(" ")))
 
-    rankMargin = separateMarginData(rankMargin, variableList, filePath, "CPU" + cpuNum + "RankMargin")
-    laneMargin = separateMarginData(laneMargin, variableList, filePath, "CPU" + cpuNum + "LaneMargin")
+    rankMargin = separateMarginData(rankMargin, variableList, filePath, "CPU" + cpuNum + "_RankMargin")
+    laneMargin = separateMarginData(laneMargin, variableList, filePath, "CPU" + cpuNum + "_LaneMargin")
 
     return rankMargin, laneMargin, variableList
 
@@ -93,11 +94,11 @@ def separateMarginData(data, variableList, filePath, marginType):
     data = data.splitlines()
     for i in range(0, len(data)):
         data[i] = list(filter(None, data[i].split(" ")))
-    createCSVFile(filePath[:filePath.rfind(".")] + marginType + '.csv', variableList, data)
+    createCSVFile(filePath[:filePath.find("_")] + "_" + marginType + '.csv', variableList, data, filePath[filePath[:filePath.rfind("_")].rfind("_")+1:filePath.rfind(".")])
     return data
 
 
-def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap, marginType, histogram, vendorTable, boxPlot, varTable, bitMarg):
+def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap, marginType, histogram, vendorTable, boxPlot, varTable, bitMarg):    
     if boxPlot:
         boxFig, boxAxs = plt.subplots(2, 4)
     # bitMargFig, bitMargAxs = plt.subplots(2, 4)
@@ -150,24 +151,24 @@ def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap,
             if histogram:
                 histFig, histAxs = plt.subplots(2, 4)
 
-            if bitMarg:
-                bitMargFig, bitMargAxs = plt.subplots(2, 4)
+            if allMarginList[0][0][0].find('L') != -1 and bitMarg:
+                makeBitMargin(allMarginList[i], variableList, includeLine, vendorNames[i])
 
             for j in range(1, 9):
                 if histogram:
                     makeHistogram(allMarginList[i], variableList[j - 1], j, histAxs, includeLine, bootstrap)
-                if bitMarg:
-                    makeBitMargin(allMarginList[i], variableList[j - 1], j, bitMargAxs, includeLine)
+                # if bitMarg:
+                #     makeBitMargin(allMarginList[i], variableList[j - 1], j, bitMargAxs, includeLine)
 
             if histogram:
                 histFig.subplots_adjust(top=0.9, bottom=0.18, wspace=0.3, hspace=0.75)
                 histFig.suptitle(vendorNames[i] + " " + marginType)
                 histFig.savefig(vendorNames[i] + marginType.replace(" ", "") + "Histogram.pdf")
 
-            if bitMarg:
-                bitMargFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.3, hspace=0.3)
-                bitMargFig.suptitle(vendorNames[i] + " " + marginType)
-                bitMargFig.savefig(vendorNames[i] + marginType.replace(" ", "") + "BitMargin.pdf")
+            # if bitMarg:
+            #     bitMargFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.3, hspace=0.3)
+            #     bitMargFig.suptitle(vendorNames[i] + " " + marginType)
+            #     bitMargFig.savefig(vendorNames[i] + marginType.replace(" ", "") + "BitMargin.pdf")
 
     # boxFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.3, hspace=0.3)
     # bitMargFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.3, hspace=0.3)
@@ -182,12 +183,22 @@ def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap,
     # tableFig.savefig(marginType.replace(" ", "") + "VarTable.pdf", bbox_inches='tight')
 
 
-def createCSVFile(fileName, variableList, rankMarginData):
-    variableList.insert(0, "")
-    with open(fileName, 'w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(variableList)
-        writer.writerows(rankMarginData)
+def createCSVFile(fileName, variableList, rankMarginData, runNum):
+    variableList.insert(0, runNum)
+    if os.path.isfile(fileName):
+        with open(fileName, 'a', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(variableList)
+            writer.writerows(rankMarginData)
+            writer.writerow("")
+
+    else:
+        with open(fileName, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(variableList)
+            writer.writerows(rankMarginData)
+            writer.writerow("")
+
     variableList.pop(0)
 
 
@@ -199,30 +210,68 @@ def makeVarTable(mean, median, sd, iqr, meanSD1, meanSD2, meanSD3, vendorNames, 
     axs.table(cellText=[mean, median, sd, iqr, meanSD1, meanSD2, meanSD3], rowLabels=row, colLabels=vendorNames, loc='center')
     axs.set_title(variable)
 
-def makeBitMargin(rankMarginList, variable, graphNum, axs, includeLine):
-    x = 0
-    y = graphNum - 1
-    if graphNum > 4:
-        x = 1
-        y = (graphNum - 1) % 4
+def makeBitMargin(rankMarginList, variableList, includeLine, vendor):
 
-    # for i in range(0, len(columns)):
-    #     axs.scatter(range(0, len(columns[i])), columns[i], label=vendorNames[i], alpha=0.5)
-    
-    columns = []
+    allData = {}
+    allGraphs = {}
+
     for i in range(0, len(rankMarginList)):
-        columns.append(abs(int(rankMarginList[i][graphNum])))
+        tabName = rankMarginList[i][0][:rankMarginList[i][0].find('C')+2]
+        if not tabName in allData:
+            allData[tabName] = {}
+            allGraphs[tabName] = {}
 
-    axs[x, y].scatter(range(0, len(columns)), columns, alpha=0.5)
+        graphTitle = rankMarginList[i][0][:rankMarginList[i][0].rfind('.')]
+        if not graphTitle in allData[tabName]:
+            allData[tabName][graphTitle] = [],[],[],[],[],[],[],[],[]
 
-    # axs.legend(fontsize='5', loc='upper left')
-    axs[x, y].tick_params(axis='both', which='major', labelsize=5)
-    axs[x, y].set_title(variable)
+            bitMargFig, bitMargAxs = plt.subplots(2, 4)
+            allGraphs[tabName][graphTitle] = [bitMargAxs, bitMargFig]
 
-    if includeLine == "Y":
-        axs[x, y].axhline(y=6, linestyle='dotted')
 
-    axs[x, y].plot()
+        for k in range(0, 9):
+            if k == 0:
+                allData[tabName][graphTitle][k].append(int(rankMarginList[i][k][rankMarginList[i][k].rfind('.') + 2:-1]))
+            else:
+                allData[tabName][graphTitle][k].append(abs(int(rankMarginList[i][k])))
+    
+    
+    wb = openpyxl.Workbook()
+    del wb['Sheet']
+
+    for tabName in allData:
+        ws = wb.create_sheet(tabName)
+        graphPos = 1
+
+        for graphTitle in allData[tabName]:
+            for graphNum in range(1, 9):
+                x = 0
+                y = graphNum - 1
+                if graphNum > 4:
+                    x = 1
+                    y = (graphNum - 1) % 4
+
+                allGraphs[tabName][graphTitle][0][x, y].scatter(allData[tabName][graphTitle][0], allData[tabName][graphTitle][graphNum])
+                # allGraphs[tabName][graphTitle][0][x, y].tick_params(axis='both', which='major', labelsize=5)
+                allGraphs[tabName][graphTitle][0][x, y].grid(linestyle='dotted')
+                allGraphs[tabName][graphTitle][0][x, y].set_title(variableList[graphNum-1])
+
+                if includeLine == "Y":
+                    allGraphs[tabName][graphTitle][0][x, y].axhline(y=6, linestyle='dashed')
+
+            allGraphs[tabName][graphTitle][1].suptitle(graphTitle)
+            allGraphs[tabName][graphTitle][1].set_figwidth(25)
+            allGraphs[tabName][graphTitle][1].subplots_adjust(top=0.85, bottom=0.1, wspace=0.3, hspace=0.3)
+            allGraphs[tabName][graphTitle][1].savefig(vendor+'_'+graphTitle+".png")
+
+            img = openpyxl.drawing.image.Image(vendor+'_'+graphTitle+'.png')
+            ws.add_image(img, anchor='A'+str(graphPos))
+            
+            graphPos = graphPos + 26
+
+    wb.save(vendor+'BitMargin.xlsx')
+    wb.close()
+    plt.close()
 
 
 def makeBoxPlot(columns, vendorNames, variable, axs, includeLine):
