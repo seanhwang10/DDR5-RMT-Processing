@@ -21,6 +21,7 @@ def jean_analysis():
     box_plot = box_plot_var.get()
     variable_table = variable_table_var.get()
     bit_margin = bit_margin_var.get()
+    comparator = comparator_var.get()
 
     # All inputs saved into variables named above, ready to be used.
 
@@ -39,7 +40,9 @@ def jean_analysis():
         name = name[name.find("_")+1:]
         vendorNames.append(name)
 
-    processData(folders, vendorNames, bootstrap, includeLine, histogram, vendor_table, box_plot, variable_table, bit_margin)
+    processData(folders, vendorNames, bootstrap, includeLine, histogram, vendor_table, box_plot, variable_table, bit_margin, comparator)
+    # fix comparator
+    # make radio button turn off on second click
 
 
 
@@ -60,8 +63,8 @@ def browse_folder():
 #     browse_button.grid(row=r, column=2, padx=10, pady=5)
 
 root = tk.Tk()
-root.title("DDR5 RMT GUI (Prototype)")
-root.geometry("450x200")
+root.title("DDR5 RMT GUI")
+root.geometry("500x230")
 
 num_data_var = tk.StringVar()
 folder_path_var = tk.StringVar()
@@ -72,6 +75,7 @@ vendor_table_var = tk.BooleanVar()
 box_plot_var = tk.BooleanVar()
 variable_table_var = tk.BooleanVar()
 bit_margin_var = tk.BooleanVar()
+comparator_var = tk.BooleanVar()
 
 
 num_label = tk.Label(root, text="Number of folders to analyze:")                                # numData
@@ -104,22 +108,25 @@ graph_types_label = tk.Label(root, text="Select Graph Type:")
 graph_types_label.grid(row=3, column=0, padx=9, pady=5)
 
 histogram_radio = tk.Radiobutton(root, text="Histogram", variable=histogram_var, value=True)
-histogram_radio.grid(row=3, column=1, padx=9, pady=5)
+histogram_radio.grid(row=3, column=1, padx=10, pady=5)
 
 vendor_table_radio = tk.Radiobutton(root, text="Vendor Table", variable=vendor_table_var, value=True)
-vendor_table_radio.grid(row=3, column=2, padx=9, pady=5)
+vendor_table_radio.grid(row=3, column=2, padx=10, pady=5)
 
 box_plot_radio = tk.Radiobutton(root, text="Box Plot", variable=box_plot_var, value=True)
-box_plot_radio.grid(row=4, column=0, padx=10, pady=3)
+box_plot_radio.grid(row=4, column=1, padx=10, pady=3)
 
 variable_table_radio = tk.Radiobutton(root, text="Variable Table", variable=variable_table_var, value=True)
-variable_table_radio.grid(row=4, column=1, padx=10, pady=3)
+variable_table_radio.grid(row=4, column=2, padx=10, pady=3)
 
 bit_margin_radio = tk.Radiobutton(root, text="Bit Margin", variable=bit_margin_var, value=True)
-bit_margin_radio.grid(row=4, column=2, padx=10, pady=3)
+bit_margin_radio.grid(row=5, column=1, padx=10, pady=3)
+
+comparator_radio = tk.Radiobutton(root, text="Comparator_radio", variable=bit_margin_var, value=True)
+comparator_radio.grid(row=5, column=2, padx=10, pady=3)
 
 run_button = tk.Button(root, text="Run", command=jean_analysis, width=20)
-run_button.grid(row=5, column=0, columnspan=3, padx=10, pady=5)
+run_button.grid(row=6, column=0, columnspan=3, padx=10, pady=5)
 
 
 
