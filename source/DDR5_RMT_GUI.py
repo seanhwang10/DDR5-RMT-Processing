@@ -41,7 +41,6 @@ def jean_analysis():
         vendorNames.append(name)
 
     processData(folders, vendorNames, bootstrap, includeLine, histogram, vendor_table, box_plot, variable_table, bit_margin, comparator)
-    # fix comparator
     # make radio button turn off on second click
 
 
@@ -122,7 +121,7 @@ variable_table_radio.grid(row=4, column=2, padx=10, pady=3)
 bit_margin_radio = tk.Radiobutton(root, text="Bit Margin", variable=bit_margin_var, value=True)
 bit_margin_radio.grid(row=5, column=1, padx=10, pady=3)
 
-comparator_radio = tk.Radiobutton(root, text="Comparator_radio", variable=bit_margin_var, value=True)
+comparator_radio = tk.Radiobutton(root, text="Comparator", variable=comparator_var, value=True)
 comparator_radio.grid(row=5, column=2, padx=10, pady=3)
 
 run_button = tk.Button(root, text="Run", command=jean_analysis, width=20)
