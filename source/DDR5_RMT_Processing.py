@@ -42,7 +42,6 @@ def processData(folders, vendorNames, bootstrap, includeLine, histogram, vendorT
     makeGraphs(allLaneMarginCPU1, variableList, vendorNames, includeLine, bootstrap, "CPU1 Lane Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[i])))
 
     print("Done")
-    plt.show()
 
     
 def readData(folder, folderPath, vendorName):
@@ -153,7 +152,12 @@ def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap,
             boxFig.savefig(marginType.replace(" ", "_") + "BoxPlot.pdf")
 
         if varTable:
-            tableFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.4, hspace=0.3)
+            if len(vendorNames) == 1:
+                tableFig.subplots_adjust(top=0.85, bottom=0.05, wspace=1.5, hspace=0.3)
+            elif len(vendorNames) == 2:
+                tableFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.8, hspace=0.3)
+            elif len(vendorNames) == 3:
+                tableFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.4, hspace=0.3)
             tableFig.suptitle(marginType)
             tableFig.savefig(marginType.replace(" ", "_") + "VarTable.pdf", bbox_inches='tight')
 
@@ -261,7 +265,6 @@ def makeComparator(marginList, allGraphs, variableList, includeLine, vendor, num
 
     wb.save('LaneComparison.xlsx')
     wb.close()
-    plt.close()
 
 
 def makeCompGraphs(marginList):
@@ -338,7 +341,6 @@ def makeBitMargin(marginList, variableList, includeLine, vendor):
 
     wb.save(vendor+'BitMargin.xlsx')
     wb.close()
-    plt.close()
 
 
 def makeBoxPlot(columns, vendorNames, variable, axs, includeLine):
