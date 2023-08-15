@@ -3,11 +3,22 @@
 # Author: Jean Mattekatt
 # Date: 7/11/2023
 
-# Description: This code reads DDR5 data and converts it into a histogram, table, boxplot, and bit margin (scatterplot)
+# Description: This code reads DDR5 data and converts it into a histogram, tables, boxplot, 
+# bit margin (scatterplot), and average bit margin graphs
+
+# Assumption:
+# There is no csv files with the name: vendorName + "_" + marginType + ".csv"
+# vendorName ex: 3rd to last word in folder name, separated by '_'
+#                Everett_EMR_SK_64GB_1DPC --> SK
+#                Everett_EMR_Samsung_64GB_1DPC --> Samsung
+#                Everett_EMR_Micron_64GB_1DPC --> Micron
+# marginType ex: CPU0_RankMargin, CPU0_LaneMargin, CPU1_RankMargin, CPU1_LaneMargin
 # ----------------------------------------------
 
 # pip install matplotlib
 # pip install scikit-learn
+# pip install openpyxl
+
 
 import os
 import numpy as np
@@ -23,18 +34,17 @@ def processData(folders, vendorNames, bootstrap, includeLine, histogram, vendorT
     allRankMarginCPU1, allLaneMarginCPU1, variableList = [None] * len(folders), [None] * len(folders), [None] * len(folders)
     for i in range(0, len(folders)):
         allRankMarginCPU0[i], allLaneMarginCPU0[i], allRankMarginCPU1[i], allLaneMarginCPU1[i], variableList = readData(os.listdir(folders[i]), folders[i], vendorNames[i])
-
-    # print(allRankMarginCPU0)
     
     makeGraphs(allRankMarginCPU0, variableList, vendorNames, includeLine, bootstrap, "CPU0 Rank Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[i])))
     makeGraphs(allLaneMarginCPU0, variableList, vendorNames, includeLine, bootstrap, "CPU0 Lane Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[i])))
     
-    # makeGraphs(allRankMarginCPU1, variableList, vendorNames, includeLine, bootstrap, "CPU1 Rank Margin")
-    # makeGraphs(allLaneMarginCPU1, variableList, vendorNames, includeLine, bootstrap, "CPU1 Lane Margin")
+    makeGraphs(allRankMarginCPU1, variableList, vendorNames, includeLine, bootstrap, "CPU1 Rank Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[i])))
+    makeGraphs(allLaneMarginCPU1, variableList, vendorNames, includeLine, bootstrap, "CPU1 Lane Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[i])))
 
+    print("Done")
     plt.show()
 
-
+    
 def readData(folder, folderPath, vendorName):
     allRankMarginCPU0 = []
     allLaneMarginCPU0 = []
@@ -77,6 +87,7 @@ def readData(folder, folderPath, vendorName):
 
     return allRankMarginCPU0, allLaneMarginCPU0, allRankMarginCPU1, allLaneMarginCPU1, variableListCPU0
 
+
 def separateCPU(data, filePath, cpuNum, vendorName):
     rankMargin = data[data.find("Rank Margin"):data.find("Lane Margin")]
     laneMargin = data[data.find("Lane Margin"):data.find("CA Lane Margin")]
@@ -102,10 +113,12 @@ def separateMarginData(data, marginType, vendorName):
 def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap, marginType, histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, numFiles):    
     if boxPlot:
         boxFig, boxAxs = plt.subplots(2, 4)
-    # bitMargFig, bitMargAxs = plt.subplots(2, 4)
 
     if varTable:
         tableFig, tableAxs = plt.subplots(2, 4)
+
+    if comparator:
+        compGraphs = makeCompGraphs(allMarginList[0])
 
     allMean = []
     allMedian = []
@@ -121,7 +134,7 @@ def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap,
 
             if boxPlot:
                 makeBoxPlot(columns, vendorNames, variableList[i - 1], boxAxs[x, y], includeLine)
-            # makeBitMargin(columns, vendorNames, variableList[i - 1], bitMargAxs[x, y], includeLine)
+
             if varTable:
                 makeVarTable(mean, median, sd, iqr, meanSD1, meanSD2, meanSD3, vendorNames, variableList[i-1], tableAxs[x, y])
 
@@ -147,6 +160,7 @@ def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap,
         if vendorTable:
             makeTable(variableList, vendorNames, allMean, allMedian, allSD, allIQR, allMeanSD1, allMeanSD2, allMeanSD3, marginType)
 
+
     if histogram or bitMarg or comparator:
         for i in range(0, len(vendorNames)):
             if histogram:
@@ -159,28 +173,11 @@ def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap,
                 histFig.suptitle(vendorNames[i] + " " + marginType)
                 histFig.savefig(vendorNames[i] + "_" + marginType.replace(" ", "_") + "Histogram.pdf")
 
-            if allMarginList[0][0][0].find('L') != -1 and (bitMarg or comparator):
-                compList, compGraphs = makeBitMargin(allMarginList[i], variableList, includeLine, vendorNames[i], bitMarg, comparator)
+            if allMarginList[0][0][0].find('L') != -1 and bitMarg:
+                makeBitMargin(allMarginList[i], variableList, includeLine, vendorNames[i])
 
-                if allMarginList[0][0][0].find('L') != -1 and comparator:
-                    makeComparator(compList, compGraphs, variableList, includeLine, vendorNames[i], numFiles)
-
-            # if bitMarg:
-            #     bitMargFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.3, hspace=0.3)
-            #     bitMargFig.suptitle(vendorNames[i] + " " + marginType)
-            #     bitMargFig.savefig(vendorNames[i] + marginType.replace(" ", "") + "BitMargin.pdf")
-
-    # boxFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.3, hspace=0.3)
-    # bitMargFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.3, hspace=0.3)
-    # tableFig.subplots_adjust(top=0.85, bottom=0.05, wspace=0.63)
-
-    # boxFig.suptitle(marginType)
-    # bitMargFig.suptitle(marginType)
-    # tableFig.suptitle(marginType)
-    
-    # boxFig.savefig(marginType.replace(" ", "") + "BoxPlot.pdf")
-    # bitMargFig.savefig(marginType.replace(" ", "") + "BitMargin.pdf")
-    # tableFig.savefig(marginType.replace(" ", "") + "VarTable.pdf", bbox_inches='tight')
+            if allMarginList[0][0][0].find('L') != -1 and comparator:
+                makeComparator(allMarginList[i], compGraphs, variableList, includeLine, vendorNames[i], numFiles)
 
 
 def createCSVFile(fileName, rankMarginData):
@@ -203,72 +200,118 @@ def makeVarTable(mean, median, sd, iqr, meanSD1, meanSD2, meanSD3, vendorNames, 
     axs.table(cellText=[mean, median, sd, iqr, meanSD1, meanSD2, meanSD3], rowLabels=row, colLabels=vendorNames, loc='center')
     axs.set_title(variable)
 
-def makeComparator1(rankMarginList, variableList, includeLine, vendor, numFiles):
-    allData = {}
-    allGraphs = {}
 
-    for i in range(0, len(rankMarginList)):
-        tabName = rankMarginList[i][0][:rankMarginList[i][0].find('C')] + rankMarginList[i][0][rankMarginList[i][0].find('D'):]
-        if not tabName in allData:
-            allData[tabName] = [],[],[],[],[],[],[],[],[]
-            allGraphs[tabName] = [],[],[],[],[],[],[],[],[]
-            # allData[tabName] = {}
-            # allGraphs[tabName] = {}
+def makeComparator(marginList, allGraphs, variableList, includeLine, vendor, numFiles):
+    avgData = {}
 
-        # graphTitle = rankMarginList[i][0][:rankMarginList[i][0].rfind('.')]
-        # if not graphTitle in allData[tabName]:
-        #     allData[tabName][graphTitle] = [],[],[],[],[],[],[],[],[]
+    for i in range(0, len(marginList)):
+        tabName = marginList[i][0][:marginList[i][0].find('C')+2]
+        if not tabName in avgData:
+            avgData[tabName] = {}
 
-        #     bitMargFig, bitMargAxs = plt.subplots(2, 4)
-        #     allGraphs[tabName][graphTitle] = [bitMargAxs, bitMargFig]
-
-        laneNum = int(rankMarginList[i][0][rankMarginList[i][0].rfind('.') + 2:-1])
-        for k in range(1, 9):
-            graphTitle = rankMarginList[i][0][:rankMarginList[i][0].rfind('.')]
-            if not graphTitle in allData[tabName][i]:
-                allData.append()
-
-
-            if k == 0:
-                allData[tabName][graphTitle][k].append(laneNum)
+        graphTitle = marginList[i][0][:marginList[i][0].rfind('.')]
+        if not graphTitle in avgData[tabName]:
+            avgData[tabName][graphTitle] = [],[],[],[],[],[],[],[]
+        
+        laneNum = int(marginList[i][0][marginList[i][0].rfind('.') + 2:-1])
+        for k in range(0, 8):
+            if len(avgData[tabName][graphTitle][k]) < 40:
+                avgData[tabName][graphTitle][k].append(abs(int(marginList[i][k+1])))
             else:
-                allData[tabName][graphTitle][k].append(abs(int(rankMarginList[i][k])))
+                avgData[tabName][graphTitle][k][laneNum] += abs(int(marginList[i][k+1]))
 
-            if len(rankMarginList[tabName][graphTitle][k-1]) < 40:
-                rankMarginList[tabName][graphTitle][k-1].append(abs(int(rankMarginList[i][k])))
-            else:
-                rankMarginList[tabName][graphTitle][k-1][laneNum] += abs(int(rankMarginList[i][k]))
-
-def makeComparator(avgData, allGraphs, variableList, includeLine, vendor, numFiles):
-    # print(avgData)
     for tabName in avgData:
         for graphTitle in avgData[tabName]:
-            for i in range(0, 9):
+            for i in range(0, 8):
                 avgData[tabName][graphTitle] = list(avgData[tabName][graphTitle])
                 avgData[tabName][graphTitle][i] = [round(num/numFiles,2) for num in avgData[tabName][graphTitle][i]]
 
     wb = openpyxl.Workbook()
     del wb['Sheet']
-
-    # for graphTitle in avgData[tabName]:
-    #     for varNum in range(1, 9):
-    #         print(graphTitle)
-    #         ws = wb.create_sheet(graphTitle[i][0][:graphTitle[i][0].find('C')] + graphTitle[i][0][graphTitle[i][0].find('D'):])
-    #         graphPos = 1
-
-    #         for tabName in avgData:
-    #             x = 0
-    #             y = int(tabName[-1])
-    #             if int(tabName[-1]) > 3:
-    #                 x = 1
-    #                 y = (int(tabName[-1])) % 4
-
-    #             # print(range(0, 40))
+    
     for tabName in avgData:
         ws = wb.create_sheet(tabName)
         graphPos = 1
 
         for graphTitle in avgData[tabName]:
+            for graphNum in range(0, 8):
+                x = 0
+                y = graphNum
+                if graphNum > 3:
+                    x = 1
+                    y = graphNum % 4
+
+                allGraphs[tabName][graphTitle][0][x, y].plot(range(0, 40), avgData[tabName][graphTitle][graphNum], label=vendor)
+                allGraphs[tabName][graphTitle][0][x, y].grid(linestyle='dotted')
+                allGraphs[tabName][graphTitle][0][x, y].set_title(variableList[graphNum])
+                allGraphs[tabName][graphTitle][0][x, y].legend(fontsize='5', loc='upper right')
+
+                if includeLine == "Y":
+                    allGraphs[tabName][graphTitle][0][x, y].axhline(y=6, linestyle='dashed')
+
+            allGraphs[tabName][graphTitle][1].suptitle(graphTitle)
+            allGraphs[tabName][graphTitle][1].set_figwidth(25)
+            allGraphs[tabName][graphTitle][1].subplots_adjust(top=0.85, bottom=0.1, wspace=0.3, hspace=0.3)
+            allGraphs[tabName][graphTitle][1].savefig(vendor+'_'+graphTitle+"Comparator.png")
+
+            img = openpyxl.drawing.image.Image(vendor+'_'+graphTitle+'Comparator.png')
+            ws.add_image(img, anchor='A'+str(graphPos))
+            
+            graphPos = graphPos + 26
+
+    wb.save('LaneComparison.xlsx')
+    wb.close()
+    plt.close()
+
+
+def makeCompGraphs(marginList):
+    allCompGraphs = {}
+
+    for i in range(0, len(marginList)):
+        tabName = marginList[i][0][:marginList[i][0].find('C')+2]
+        if not tabName in allCompGraphs:
+            allCompGraphs[tabName] = {}
+
+        graphTitle = marginList[i][0][:marginList[i][0].rfind('.')]
+        if not graphTitle in allCompGraphs[tabName]:
+            compFig, compAxs = plt.subplots(2, 4)
+            allCompGraphs[tabName][graphTitle] = [compAxs, compFig]
+
+    return allCompGraphs
+
+
+def makeBitMargin(marginList, variableList, includeLine, vendor):
+    allData = {}
+    allGraphs = {}
+
+    for i in range(0, len(marginList)):
+        tabName = marginList[i][0][:marginList[i][0].find('C')+2]
+        if not tabName in allData:
+            allData[tabName] = {}
+            allGraphs[tabName] = {}
+
+        graphTitle = marginList[i][0][:marginList[i][0].rfind('.')]
+        if not graphTitle in allData[tabName]:
+            allData[tabName][graphTitle] = [],[],[],[],[],[],[],[],[]
+            
+            bitMargFig, bitMargAxs = plt.subplots(2, 4)
+            allGraphs[tabName][graphTitle] = [bitMargAxs, bitMargFig]
+
+        laneNum = int(marginList[i][0][marginList[i][0].rfind('.') + 2:-1])
+        for k in range(0, 9):
+            if k == 0:
+                allData[tabName][graphTitle][k].append(laneNum)
+            else:
+                allData[tabName][graphTitle][k].append(abs(int(marginList[i][k])))
+
+    wb = openpyxl.Workbook()
+    del wb['Sheet']
+
+    for tabName in allData:
+        ws = wb.create_sheet(tabName)
+        graphPos = 1
+
+        for graphTitle in allData[tabName]:
             for graphNum in range(1, 9):
                 x = 0
                 y = graphNum - 1
@@ -276,125 +319,26 @@ def makeComparator(avgData, allGraphs, variableList, includeLine, vendor, numFil
                     x = 1
                     y = (graphNum - 1) % 4
 
-                allGraphs[tabName][graphTitle][0][x, y].plot(avgData[tabName][graphTitle][0], avgData[tabName][graphTitle][graphNum], label=vendor)
+                allGraphs[tabName][graphTitle][0][x, y].scatter(allData[tabName][graphTitle][0], allData[tabName][graphTitle][graphNum])
                 allGraphs[tabName][graphTitle][0][x, y].grid(linestyle='dotted')
-                allGraphs[tabName][graphTitle][0][x, y].set_title(graphTitle)
+                allGraphs[tabName][graphTitle][0][x, y].set_title(variableList[graphNum-1])
 
                 if includeLine == "Y":
                     allGraphs[tabName][graphTitle][0][x, y].axhline(y=6, linestyle='dashed')
 
-            allGraphs[tabName][graphTitle][1].suptitle(variableList[graphNum])
+            allGraphs[tabName][graphTitle][1].suptitle(graphTitle)
             allGraphs[tabName][graphTitle][1].set_figwidth(25)
             allGraphs[tabName][graphTitle][1].subplots_adjust(top=0.85, bottom=0.1, wspace=0.3, hspace=0.3)
-            # allGraphs[tabName][graphTitle][1].savefig(vendor+'_'+variableList[graphNum]+"Comparator.png")
-            allGraphs[tabName][graphTitle][1].savefig(vendor+'_'+graphTitle+"Comparator.png")
+            allGraphs[tabName][graphTitle][1].savefig(vendor+'_'+graphTitle+".png")
 
-            # img = openpyxl.drawing.image.Image(vendor+'_'+variableList[graphNum]+'Comparator.png')
-            img = openpyxl.drawing.image.Image(vendor+'_'+graphTitle+'Comparator.png')
+            img = openpyxl.drawing.image.Image(vendor+'_'+graphTitle+'.png')
             ws.add_image(img, anchor='A'+str(graphPos))
-            
+                
             graphPos = graphPos + 26
 
-    wb.save(vendor+'LaneComparison.xlsx')
+    wb.save(vendor+'BitMargin.xlsx')
     wb.close()
     plt.close()
-
-def makeBitMargin(rankMarginList, variableList, includeLine, vendor, bitMarg, comparator):
-    allData = {}
-    findAvgData = {}
-    allBMGraphs = {}
-    allCompGraphs = {}
-
-    for i in range(0, len(rankMarginList)):
-        tabName = rankMarginList[i][0][:rankMarginList[i][0].find('C')+2]
-        if not tabName in allData:
-            allData[tabName] = {}
-            findAvgData[tabName] = {}
-            allBMGraphs[tabName] = {}
-            allCompGraphs[tabName] = {}
-
-        graphTitle = rankMarginList[i][0][:rankMarginList[i][0].rfind('.')]
-        if not graphTitle in allData[tabName]:
-            allData[tabName][graphTitle] = [],[],[],[],[],[],[],[],[]
-            # findAvgData[tabName][graphTitle[graphTitle.find('D')-1:]] = [],[],[],[],[],[],[],[],[]
-            findAvgData[tabName][graphTitle] = [],[],[],[],[],[],[],[],[]
-            
-            if bitMarg:
-                bitMargFig, bitMargAxs = plt.subplots(2, 4)
-                allBMGraphs[tabName][graphTitle] = [bitMargAxs, bitMargFig]
-
-            if comparator:
-                compFig, compAxs = plt.subplots(2, 4)
-                # allCompGraphs[tabName][graphTitle[graphTitle.find('D')-1:]] = [compAxs, compFig]
-                allCompGraphs[tabName][graphTitle] = [compAxs, compFig]
-
-        laneNum = int(rankMarginList[i][0][rankMarginList[i][0].rfind('.') + 2:-1])
-        for k in range(0, 9):
-            if k == 0:
-                if bitMarg:
-                    allData[tabName][graphTitle][k].append(laneNum)
-                # if comparator:
-                #     if len(findAvgData[tabName][graphTitle[graphTitle.find('D')-1:]]) < 40:
-                #         findAvgData[tabName][graphTitle[graphTitle.find('D')-1:]][k].append(laneNum)
-                #     else:
-                #         findAvgData[tabName][graphTitle[graphTitle.find('D')-1:]][k][laneNum] += laneNum
-                if comparator:
-                    if len(findAvgData[tabName][graphTitle]) < 40:
-                        findAvgData[tabName][graphTitle][k].append(laneNum)
-                    else:
-                        findAvgData[tabName][graphTitle][k][laneNum] += laneNum
-            else:
-                if bitMarg:
-                    allData[tabName][graphTitle][k].append(abs(int(rankMarginList[i][k])))
-
-                # if comparator:
-                #     if len(findAvgData[tabName][graphTitle[graphTitle.find('D')-1:]]) < 40:
-                #         findAvgData[tabName][graphTitle[graphTitle.find('D')-1:]][k].append(abs(int(rankMarginList[i][k])))
-                #     else:
-                #         findAvgData[tabName][graphTitle[graphTitle.find('D')-1:]][k][laneNum] += abs(int(rankMarginList[i][k]))
-                if comparator:
-                    if len(findAvgData[tabName]) < 40:
-                        findAvgData[tabName][graphTitle][k].append(abs(int(rankMarginList[i][k])))
-                    else:
-                        findAvgData[tabName][graphTitle][k][laneNum] += abs(int(rankMarginList[i][k]))
-    if bitMarg:
-        wb = openpyxl.Workbook()
-        del wb['Sheet']
-
-        for tabName in allData:
-            ws = wb.create_sheet(tabName)
-            graphPos = 1
-
-            for graphTitle in allData[tabName]:
-                for graphNum in range(1, 9):
-                    x = 0
-                    y = graphNum - 1
-                    if graphNum > 4:
-                        x = 1
-                        y = (graphNum - 1) % 4
-
-                    allBMGraphs[tabName][graphTitle][0][x, y].scatter(allData[tabName][graphTitle][0], allData[tabName][graphTitle][graphNum])
-                    allBMGraphs[tabName][graphTitle][0][x, y].grid(linestyle='dotted')
-                    allBMGraphs[tabName][graphTitle][0][x, y].set_title(variableList[graphNum-1])
-
-                    if includeLine == "Y":
-                        allBMGraphs[tabName][graphTitle][0][x, y].axhline(y=6, linestyle='dashed')
-
-                allBMGraphs[tabName][graphTitle][1].suptitle(graphTitle)
-                allBMGraphs[tabName][graphTitle][1].set_figwidth(25)
-                allBMGraphs[tabName][graphTitle][1].subplots_adjust(top=0.85, bottom=0.1, wspace=0.3, hspace=0.3)
-                allBMGraphs[tabName][graphTitle][1].savefig(vendor+'_'+graphTitle+".png")
-
-                img = openpyxl.drawing.image.Image(vendor+'_'+graphTitle+'.png')
-                ws.add_image(img, anchor='A'+str(graphPos))
-                
-                graphPos = graphPos + 26
-
-        wb.save(vendor+'BitMargin.xlsx')
-        wb.close()
-        plt.close()
-
-    return findAvgData, allCompGraphs
 
 
 def makeBoxPlot(columns, vendorNames, variable, axs, includeLine):
@@ -446,6 +390,7 @@ def makeTable(variableList, vendorNames, allMean, allMedian, allSD, allIQR, allM
     tableFig.subplots_adjust(top=0.85, bottom=0.04, hspace=0.75)
     tableFig.savefig(marginType.replace(" ", "") + "VendorTable.pdf", bbox_inches='tight')
 
+
 def calculateStats(rankMarginList, graphNum, bootstrap):
     x = 0
     y = graphNum - 1
@@ -476,6 +421,7 @@ def calculateStats(rankMarginList, graphNum, bootstrap):
         meanSD3.append(round(mean[i] - (3 * stdev[i]), 4))
 
     return columns, x, y, mean, median, stdev, iqr, meanSD1, meanSD2, meanSD3
+
 
 def makeHistogram(rankMarginList, variable, graphNum, axs, includeLine, bootstrap):    
     x = 0
