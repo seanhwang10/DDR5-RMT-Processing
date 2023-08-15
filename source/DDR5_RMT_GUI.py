@@ -49,9 +49,6 @@ def jean_analysis():
 
     # runs DDR5_RMT_Processing.py with all GUI inputs
     processData(folders, vendorNames, bootstrap, includeLine, histogram, vendor_table, box_plot, variable_table, bit_margin, comparator)
-    # make radio button turn off on second click
-
-
 
 
 # ---GUI Code Below ------------------------------------------------------------------------------- #
@@ -98,22 +95,22 @@ include_line_no_radio.grid(row=2, column=2, padx=10, pady=5)
 graph_types_label = tk.Label(root, text="Select Graph Type:")                                           
 graph_types_label.grid(row=3, column=0, padx=9, pady=5)
 
-histogram_radio = tk.Radiobutton(root, text="Histogram", variable=histogram_var, value=True)                # histogram
+histogram_radio = tk.Checkbutton(root, text="Histogram", variable=histogram_var, onvalue = True, offvalue = False)                # histogram
 histogram_radio.grid(row=3, column=1, padx=10, pady=5)
 
-vendor_table_radio = tk.Radiobutton(root, text="Vendor Table", variable=vendor_table_var, value=True)       # vendor_table
+vendor_table_radio = tk.Checkbutton(root, text="Vendor Table", variable=vendor_table_var, onvalue = True, offvalue = False)       # vendor_table
 vendor_table_radio.grid(row=3, column=2, padx=10, pady=5)
 
-box_plot_radio = tk.Radiobutton(root, text="Box Plot", variable=box_plot_var, value=True)                   # box_plot
+box_plot_radio = tk.Checkbutton(root, text="Box Plot", variable=box_plot_var, onvalue = True, offvalue = False)                   # box_plot
 box_plot_radio.grid(row=4, column=1, padx=10, pady=3)
 
-variable_table_radio = tk.Radiobutton(root, text="Variable Table", variable=variable_table_var, value=True) # variable_table
+variable_table_radio = tk.Checkbutton(root, text="Variable Table", variable=variable_table_var, onvalue = True, offvalue = False) # variable_table
 variable_table_radio.grid(row=4, column=2, padx=10, pady=3)
 
-bit_margin_radio = tk.Radiobutton(root, text="Bit Margin", variable=bit_margin_var, value=True)             # bit_margin
+bit_margin_radio = tk.Checkbutton(root, text="Bit Margin", variable=bit_margin_var, onvalue = True, offvalue = False)             # bit_margin
 bit_margin_radio.grid(row=5, column=1, padx=10, pady=3)
 
-comparator_radio = tk.Radiobutton(root, text="Comparator", variable=comparator_var, value=True)             # comparator
+comparator_radio = tk.Checkbutton(root, text="Comparator", variable=comparator_var, onvalue = True, offvalue = False)             # comparator
 comparator_radio.grid(row=5, column=2, padx=10, pady=3)
 
 run_button = tk.Button(root, text="Run", command=jean_analysis, width=20)                                   # button to run jean_analysis()
