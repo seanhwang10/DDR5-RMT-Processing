@@ -53,6 +53,7 @@ def readData(folder, folderPath, vendorName):
 
     variableListCPU0 = ""
 
+    # reads through all files in folder
     for fileName in folder:
         file = open(folderPath + "\\" + fileName, "r")
         text = file.readlines()
@@ -60,6 +61,8 @@ def readData(folder, folderPath, vendorName):
         dataCPU1 = ""
         recordCPU0Data = False
         recordCPU1Data = False
+
+        # saves data between 'START_RMT' and 'STOP_RMT'
         for line in text:
             if line.find("START_RMT_N0") != -1:
                 recordCPU0Data = True
@@ -75,6 +78,7 @@ def readData(folder, folderPath, vendorName):
                 dataCPU1 = dataCPU1 + line
         file.close()
 
+        # separate each CPU data in lists by margin type 
         rankMarginCPU0, laneMarginCPU0, variableListCPU0 = separateCPU(dataCPU0, fileName, str(0), vendorName)
         rankMarginCPU1, laneMarginCPU1, variableListCPU1 = separateCPU(dataCPU1, fileName, str(1), vendorName)
 
@@ -94,6 +98,7 @@ def separateCPU(data, filePath, cpuNum, vendorName):
     variableList = rankMargin[rankMargin.find("RxDqs-"):rankMargin.find("\nN" + cpuNum)]
     variableList = list(filter(None, variableList.split(" ")))
 
+    # separate each CPU data in lists by line
     rankMargin = separateMarginData(rankMargin, "CPU" + cpuNum + "_RankMargin", vendorName)
     laneMargin = separateMarginData(laneMargin, "CPU" + cpuNum + "_LaneMargin", vendorName)
 
@@ -152,6 +157,7 @@ def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap,
             boxFig.savefig(marginType.replace(" ", "_") + "BoxPlot.pdf")
 
         if varTable:
+            # different spacing between tables according to number of tables
             if len(vendorNames) == 1:
                 tableFig.subplots_adjust(top=0.85, bottom=0.05, wspace=1.5, hspace=0.3)
             elif len(vendorNames) == 2:
@@ -185,10 +191,12 @@ def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap,
 
 
 def createCSVFile(fileName, rankMarginData):
+    # create new csv file
     if os.path.isfile(fileName):
         with open(fileName, 'a', newline='') as file:
             writer = csv.writer(file)
             writer.writerows(rankMarginData)
+    # add to previous csv file
     else:
         with open(fileName, 'w', newline='') as file:
             writer = csv.writer(file)

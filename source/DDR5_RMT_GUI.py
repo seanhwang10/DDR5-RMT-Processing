@@ -39,7 +39,7 @@ def jean_analysis():
 
 
     # ---- Your code should begin here ----------------------------------------------------------- #
-    # creates list of vendor Names
+    # create list of vendor names
     vendorNames = []
     for i in range(0, numData):
         name = folders[i][folders[i].rfind("/")+1:folders[i].rfind("_")]
@@ -47,7 +47,7 @@ def jean_analysis():
         name = name[name.find("_")+1:]
         vendorNames.append(name)
 
-    # runs DDR5_RMT_Processing.py with all GUI inputs
+    # run DDR5_RMT_Processing.py with all GUI inputs
     processData(folders, vendorNames, bootstrap, includeLine, histogram, vendor_table, box_plot, variable_table, bit_margin, comparator)
 
 
