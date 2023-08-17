@@ -1,19 +1,16 @@
 # ----------------------------------------------
 # File name: RMT_Processing.py
 # Author: Jean Mattekatt
-# Date: 7/11/2023
+# Date: 7/25/2023
 
-# Description: This code reads DDR5 data and converts it into a histogram, tables, boxplot, 
-# bit margin (scatterplot), and average bit margin graphs. Prints 'done' in terminal once finished
+# Description: This code reads PCIe data and converts it into scatterplots and an average value line graph
 
-# Assumption:
-#   There is no csv files with the name: vendorName + "_" + marginType + ".csv"
-#       vendorName ex: 3rd to last word in folder name, separated by '_'
-#                       Everett_EMR_SK_64GB_1DPC --> SK
-#                       Everett_EMR_Samsung_64GB_1DPC --> Samsung
-#                       Everett_EMR_Micron_64GB_1DPC --> Micron
-#       marginType ex: CPU0_RankMargin, CPU0_LaneMargin, CPU1_RankMargin, CPU1_LaneMargin
-#   All folders have the same number of files
+# Assumptions:
+#   1. Name of vendor is 3rd to last and last word in folder name, separated by '_'
+#           Everett_EMR_CPU0_MEZZ_Long_IntelFM85 --> MEZZ_IntelFM85
+#           Everett_EMR_CPU0_MEZZ_Long_Nvidia --> MEZZ_Nvidia
+#           Everett_EMR_CPU0_mLOM_Long_IntelFM85 --> mLOM_IntelFM85
+#           Everett_EMR_CPU0_mLOM_Long_Nvidia --> mLOM_Nvidia
 # ----------------------------------------------
 
 # pip install matplotlib
