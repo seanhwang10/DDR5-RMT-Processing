@@ -4,7 +4,7 @@
 # Date: 7/11/2023
 
 # Description: This code reads DDR5 data and converts it into a histogram, tables, boxplot, 
-# bit margin (scatterplot), and average bit margin graphs
+# bit margin (scatterplot), and average bit margin graphs. Prints 'done' in terminal once finished
 
 # Assumption:
 #   There is no csv files with the name: vendorName + "_" + marginType + ".csv"
