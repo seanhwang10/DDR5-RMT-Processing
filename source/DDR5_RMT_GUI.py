@@ -85,7 +85,7 @@ bootstrap_yes_radio.grid(row=1, column=1, padx=10, pady=5)
 bootstrap_no_radio = tk.Radiobutton(root, text="No", variable=bootstrap_var, value=False)
 bootstrap_no_radio.grid(row=1, column=2, padx=10, pady=5)
 
-include_line_label = tk.Label(root, text="Margin Line?")                                            # includeLine
+include_line_label = tk.Label(root, text="Threshold Line?")                                            # includeLine
 include_line_label.grid(row=2, column=0, padx=10, pady=5)
 include_line_yes_radio = tk.Radiobutton(root, text="Yes", variable=include_line_var, value=True)
 include_line_yes_radio.grid(row=2, column=1, padx=10, pady=5)

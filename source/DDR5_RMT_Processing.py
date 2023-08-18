@@ -39,8 +39,8 @@ def processData(folders, vendorNames, bootstrap, includeLine, histogram, vendorT
     Args:
         folders (list): contains all folder paths
         vendorNames (list): contains all vendor names
-        bootstrap (str): 'Y' if yes, 'N' if no
-        includeLine (str): 'Y' if yes, 'N' if no
+        bootstrap (str): 'Y' if yes, 'N' if no - decides if data is bootstrapped
+        includeLine (str): 'Y' if yes, 'N' if no - decides if threshold line is included
         histogram (boolean): True if graphs histogram
         vendorTable (boolean): True if creates vendor table
         boxPlot (boolean): True if graphs box plot
@@ -49,17 +49,21 @@ def processData(folders, vendorNames, bootstrap, includeLine, histogram, vendorT
         comparator (boolean): True if graphs average bit margin (line graph)
 
     """ 
-    allRankMarginCPU0, allLaneMarginCPU0 = [None] * len(folders), [None] * len(folders)
-    allRankMarginCPU1, allLaneMarginCPU1, variableList = [None] * len(folders), [None] * len(folders), [None] * len(folders)
+    allRankMarginCPU0, allLaneMarginCPU0, allCALaneMarginCPU0 = [None] * len(folders), [None] * len(folders), [None] * len(folders)
+    allRankMarginCPU1, allLaneMarginCPU1, allCALaneMarginCPU1 = [None] * len(folders), [None] * len(folders), [None] * len(folders)
+    rankVarList, caLaneVarList = [None] * len(folders), [None] * len(folders)
     for i in range(0, len(folders)):
-        allRankMarginCPU0[i], allLaneMarginCPU0[i], allRankMarginCPU1[i], allLaneMarginCPU1[i], variableList = readData(os.listdir(folders[i]), folders[i], vendorNames[i])
+        allRankMarginCPU0[i], allLaneMarginCPU0[i], allCALaneMarginCPU0[i], allRankMarginCPU1[i], allLaneMarginCPU1[i], allCALaneMarginCPU1[i], rankVarList, caLaneVarList = readData(os.listdir(folders[i]), folders[i], vendorNames[i])
     
-    makeGraphs(allRankMarginCPU0, variableList, vendorNames, includeLine, bootstrap, "CPU0 Rank Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[0])))
-    makeGraphs(allLaneMarginCPU0, variableList, vendorNames, includeLine, bootstrap, "CPU0 Lane Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[0])))
-    
-    makeGraphs(allRankMarginCPU1, variableList, vendorNames, includeLine, bootstrap, "CPU1 Rank Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[0])))
-    makeGraphs(allLaneMarginCPU1, variableList, vendorNames, includeLine, bootstrap, "CPU1 Lane Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[0])))
+    makeGraphs(allRankMarginCPU0, rankVarList, vendorNames, includeLine, bootstrap, "CPU0 Rank Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[0])), len(allRankMarginCPU0[0][0]))
+    makeGraphs(allLaneMarginCPU0, rankVarList, vendorNames, includeLine, bootstrap, "CPU0 Lane Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[0])), len(allLaneMarginCPU0[0][0]))
+    makeGraphs(allCALaneMarginCPU0, caLaneVarList, vendorNames, includeLine, bootstrap, "CPU0 CA Lane Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[0])), len(allCALaneMarginCPU0[0][0]))
 
+    # makeGraphs(allRankMarginCPU1, rankVarList, vendorNames, includeLine, bootstrap, "CPU1 Rank Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[0])), len(allRankMarginCPU0[0][0]))
+    # makeGraphs(allLaneMarginCPU1, rankVarList, vendorNames, includeLine, bootstrap, "CPU1 Lane Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[0])), len(allLaneMarginCPU0[0][0]))
+    # makeGraphs(allCALaneMarginCPU1, caLaneVarList, vendorNames, includeLine, bootstrap, "CPU1 CA Lane Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[0])), len(allCALaneMarginCPU0[0][0]))
+
+    plt.close()
     print("Done")
 
     
@@ -75,16 +79,21 @@ def readData(folder, folderPath, vendorName):
     Returns:
         list: contains all CPU0 rank margin data
         list: contains all CPU0 lane margin data
+        list: contains all CPU0 CA lane margin data
         list: contains all CPU1 rank margin data
         list: contains all CPU1 lane margin data
-        list: contains all variables
+        list: contains all CPU1 CA lane margin data
+        list: contains all rank margin variables
+        list: contains all CA lane margin variables
 
     """ 
     allRankMarginCPU0 = []
     allLaneMarginCPU0 = []
+    allCALaneMarginCPU0 = []
 
     allRankMarginCPU1 = []
     allLaneMarginCPU1 = []
+    allCALaneMarginCPU1 = []
 
     variableListCPU0 = ""
 
@@ -114,16 +123,19 @@ def readData(folder, folderPath, vendorName):
         file.close()
 
         # separate each CPU data in lists by margin type 
-        rankMarginCPU0, laneMarginCPU0, variableListCPU0 = separateCPU(dataCPU0, str(0), vendorName)
-        rankMarginCPU1, laneMarginCPU1, variableListCPU1 = separateCPU(dataCPU1, str(1), vendorName)
+        rankMarginCPU0, laneMarginCPU0, caLaneMarginCPU0, rankVarListCPU0, caLaneVarListCPU0 = separateCPU(dataCPU0, str(0), vendorName)
+        rankMarginCPU1, laneMarginCPU1, caLaneMarginCPU1, rankVarListCPU1, caLaneVarListCPU1 = separateCPU(dataCPU1, str(1), vendorName)
 
         allRankMarginCPU0.extend(rankMarginCPU0)
         allLaneMarginCPU0.extend(laneMarginCPU0)
+        allCALaneMarginCPU0.extend(caLaneMarginCPU0)
+
 
         allRankMarginCPU1.extend(rankMarginCPU1)
         allLaneMarginCPU1.extend(laneMarginCPU1)
+        allCALaneMarginCPU1.extend(caLaneMarginCPU1)
 
-    return allRankMarginCPU0, allLaneMarginCPU0, allRankMarginCPU1, allLaneMarginCPU1, variableListCPU0
+    return allRankMarginCPU0, allLaneMarginCPU0, allCALaneMarginCPU0, allRankMarginCPU1, allLaneMarginCPU1, allCALaneMarginCPU1, rankVarListCPU0, caLaneVarListCPU0
 
 
 def separateCPU(data, cpuNum, vendorName):
@@ -138,19 +150,33 @@ def separateCPU(data, cpuNum, vendorName):
     Returns:
         list: contains all rank margin data for CPU
         list: contains all lane margin data for CPU
+        list: contains all CA lane margin data for CPU without '*'
+        list: contains all rank margin variables
+        list: contains all CA lane margin variables
 
     """ 
     rankMargin = data[data.find("Rank Margin"):data.find("Lane Margin")]
     laneMargin = data[data.find("Lane Margin"):data.find("CA Lane Margin")]
+    caLaneMargin = data[data.find("CA Lane Margin"):]
 
-    variableList = rankMargin[rankMargin.find("RxDqs-"):rankMargin.find("\nN" + cpuNum)]
-    variableList = list(filter(None, variableList.split(" ")))
+    rankVarList = rankMargin[rankMargin.find("RxDqs-"):rankMargin.find("\nN" + cpuNum)]
+    rankVarList = list(filter(None, rankVarList.split(" ")))
+
+    caLaneVarList = caLaneMargin[caLaneMargin.find("Ca-"):caLaneMargin.find("\nN" + cpuNum)]
+    caLaneVarList = list(filter(None, caLaneVarList.split(" ")))
 
     # separate each CPU data in lists by line
     rankMargin = separateMarginData(rankMargin, "CPU" + cpuNum + "_RankMargin", vendorName)
     laneMargin = separateMarginData(laneMargin, "CPU" + cpuNum + "_LaneMargin", vendorName)
+    caLaneMargin = separateMarginData(caLaneMargin, "CPU" + cpuNum + "_CALaneMargin", vendorName)
 
-    return rankMargin, laneMargin, variableList
+    changedCALaneMargin = []
+
+    for i in range(0, len(caLaneMargin)):
+        if not '*' in caLaneMargin[i]:
+            changedCALaneMargin.append(caLaneMargin[i])
+
+    return rankMargin, laneMargin, changedCALaneMargin, rankVarList, caLaneVarList
 
 
 def separateMarginData(data, marginType, vendorName):
@@ -174,7 +200,7 @@ def separateMarginData(data, marginType, vendorName):
     return data
 
 
-def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap, marginType, histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, numFiles):    
+def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap, marginType, histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, numFiles, varNum):    
     """
     makeGraphs plots each type of graph/table that was selected in the GUI
 
@@ -182,8 +208,8 @@ def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap,
         allMarginList (list): contains all data for one margin
         variableList (list): contains all variables
         vendorNames (list): contains all vendor names
-        includeLine (str): 'Y' if yes, 'N' if no
-        bootstrap (str): 'Y' if yes, 'N' if no
+        includeLine (str): 'Y' if yes, 'N' if no - decides if threshold line is included
+        bootstrap (str): 'Y' if yes, 'N' if no - decides if data is bootstrapped
         marginType (str): type of margin
         histogram (boolean): True if graphs histogram
         vendorTable (boolean): True if creates vendor table
@@ -192,6 +218,7 @@ def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap,
         bitMarg (boolean): True if graphs bit margin (scatterplot)
         comparator (boolean): True if graphs average bit margin (line graph)
         numFiles (int): number of files in folder
+        varNum (int): number of variables to plot
 
     """ 
     if boxPlot:
@@ -212,7 +239,7 @@ def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap,
     allMeanSD3 = []
 
     if boxPlot or varTable or vendorTable:
-        for i in range(1, 9):
+        for i in range(1, varNum):
             columns, x, y, mean, median, sd, iqr, meanSD1, meanSD2, meanSD3 = calculateStats(allMarginList, i, bootstrap)
 
             if boxPlot:
@@ -249,24 +276,23 @@ def makeGraphs(allMarginList, variableList, vendorNames, includeLine, bootstrap,
         if vendorTable:
             makeTable(variableList, vendorNames, allMean, allMedian, allSD, allIQR, allMeanSD1, allMeanSD2, allMeanSD3, marginType)
 
-
     if histogram or bitMarg or comparator:
         for i in range(0, len(vendorNames)):
             if histogram:
                 histFig, histAxs = plt.subplots(2, 4)
             
-                for j in range(1, 9):
+                for j in range(1, varNum):
                     makeHistogram(allMarginList[i], variableList[j - 1], j, histAxs, includeLine, bootstrap)
             
                 histFig.subplots_adjust(top=0.9, bottom=0.18, wspace=0.3, hspace=0.75)
                 histFig.suptitle(vendorNames[i] + " " + marginType)
                 histFig.savefig(vendorNames[i] + "_" + marginType.replace(" ", "_") + "Histogram.pdf")
 
-            if allMarginList[0][0][0].find('L') != -1 and bitMarg:
-                makeBitMargin(allMarginList[i], variableList, includeLine, vendorNames[i])
+            if (allMarginList[0][0][0].find('L') != -1 or allMarginList[0][0][0].find('A') != -1) and bitMarg:
+                makeBitMargin(allMarginList[i], variableList, includeLine, vendorNames[i], varNum)
 
-            if allMarginList[0][0][0].find('L') != -1 and comparator:
-                makeComparator(allMarginList[i], compGraphs, variableList, includeLine, vendorNames[i], numFiles)
+            if (allMarginList[0][0][0].find('L') != -1 or allMarginList[0][0][0].find('A') != -1) and comparator:
+                makeComparator(allMarginList[i], compGraphs, variableList, includeLine, vendorNames[i], numFiles, varNum)
 
 
 def createCSVFile(fileName, marginData):
@@ -313,7 +339,7 @@ def makeVarTable(mean, median, sd, iqr, meanSD1, meanSD2, meanSD3, vendorNames, 
     axs.set_title(variable)
 
 
-def makeComparator(marginList, allGraphs, variableList, includeLine, vendor, numFiles):
+def makeComparator(marginList, allGraphs, variableList, includeLine, vendor, numFiles, varNum):
     """
     makeComparator organizes data and creates an excel containing average bit margin graphs
         
@@ -321,9 +347,10 @@ def makeComparator(marginList, allGraphs, variableList, includeLine, vendor, num
         marginList (list): contains all data for one margin
         allGraphs (list): contains axes and figures of all average bit margin graphs
         variableList (list): contains all variables
-        includeLine (str): 'Y' if yes, 'N' if no
+        includeLine (str): 'Y' if yes, 'N' if no - decides if threshold line is included
         vendor (str): name of vendor
         numFiles (int): number of files in folder
+        varNum (int): number of variables to plot
 
     """
     avgData = {}
@@ -339,7 +366,7 @@ def makeComparator(marginList, allGraphs, variableList, includeLine, vendor, num
             avgData[tabName][graphTitle] = [],[],[],[],[],[],[],[]
         
         laneNum = int(marginList[i][0][marginList[i][0].rfind('.') + 2:-1])
-        for k in range(0, 8):
+        for k in range(0, varNum - 1):
             if len(avgData[tabName][graphTitle][k]) < 40:
                 avgData[tabName][graphTitle][k].append(abs(int(marginList[i][k+1])))
             else:
@@ -348,7 +375,7 @@ def makeComparator(marginList, allGraphs, variableList, includeLine, vendor, num
     # find average of data
     for tabName in avgData:
         for graphTitle in avgData[tabName]:
-            for i in range(0, 8):
+            for i in range(0, varNum - 1):
                 avgData[tabName][graphTitle] = list(avgData[tabName][graphTitle])
                 avgData[tabName][graphTitle][i] = [round(num/numFiles,2) for num in avgData[tabName][graphTitle][i]]
 
@@ -361,7 +388,7 @@ def makeComparator(marginList, allGraphs, variableList, includeLine, vendor, num
         graphPos = 1
 
         for graphTitle in avgData[tabName]:
-            for graphNum in range(0, 8):
+            for graphNum in range(0, varNum - 1):
                 x = 0
                 y = graphNum
                 if graphNum > 3:
@@ -419,15 +446,16 @@ def makeCompGraphs(marginList):
     return allCompGraphs
 
 
-def makeBitMargin(marginList, variableList, includeLine, vendor):
+def makeBitMargin(marginList, variableList, includeLine, vendor, varNum):
     """
     makeBitMargin organizes data and creates an excel containing bit margin graphs
         
     Args:
         marginList (list): contains all data for one margin
         variableList (list): contains all variables
-        includeLine (str): 'Y' if yes, 'N' if no
+        includeLine (str): 'Y' if yes, 'N' if no - decides if threshold line is included
         vendor (str): name of vendor
+        varNum (int): number of variables to plot
 
     """
     allData = {}
@@ -448,7 +476,7 @@ def makeBitMargin(marginList, variableList, includeLine, vendor):
             allGraphs[tabName][graphTitle] = [bitMargAxs, bitMargFig]
 
         laneNum = int(marginList[i][0][marginList[i][0].rfind('.') + 2:-1])
-        for k in range(0, 9):
+        for k in range(0, varNum):
             if k == 0:
                 allData[tabName][graphTitle][k].append(laneNum)
             else:
@@ -463,7 +491,7 @@ def makeBitMargin(marginList, variableList, includeLine, vendor):
         graphPos = 1
 
         for graphTitle in allData[tabName]:
-            for graphNum in range(1, 9):
+            for graphNum in range(1, varNum):
                 x = 0
                 y = graphNum - 1
                 if graphNum > 4:
@@ -502,7 +530,7 @@ def makeBoxPlot(columns, vendorNames, variable, axs, includeLine):
         vendorNames (list): contains all vendor names
         variable (str): variable name
         axs (axes): graph axes and position of subplot
-        includeLine (str): 'Y' if yes, 'N' if no
+        includeLine (str): 'Y' if yes, 'N' if no - decides if threshold line is included
 
     """
     axs.boxplot(columns, labels=vendorNames)
@@ -577,9 +605,7 @@ def calculateStats(marginList, graphNum, bootstrap):
     Args:
         marginList (list): contains all data for one margin
         graphNum (int): position of subplot
-        bootstrap (str): 'Y' if yes, 'N' if no
-
-        columns, x, y, mean, median, stdev, iqr, meanSD1, meanSD2, meanSD3
+        bootstrap (str): 'Y' if yes, 'N' if no - decides if data is bootstrapped
 
     Returns:
         list: contains all data for variable
@@ -604,7 +630,6 @@ def calculateStats(marginList, graphNum, bootstrap):
     mean, median, stdev, iqr, meanSD1, meanSD2, meanSD3 = [], [], [], [], [], [], []
 
     for i in range(0, len(marginList)):
-
         columns.append([])
         for j in range(0, len(marginList[i])):
             columns[i].append(abs(int(marginList[i][j][graphNum])))
@@ -634,8 +659,8 @@ def makeHistogram(marginList, variable, graphNum, axs, includeLine, bootstrap):
         variable (str): variable name
         graphNum (int): position of subplot
         axs (axes): graph axes
-        includeLine (str): 'Y' if yes, 'N' if no
-        bootstrap (str): 'Y' if yes, 'N' if no
+        includeLine (str): 'Y' if yes, 'N' if no - decides if threshold line is included
+        bootstrap (str): 'Y' if yes, 'N' if no - decides if data is bootstrapped
 
     """   
     x = 0
