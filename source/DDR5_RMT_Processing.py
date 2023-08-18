@@ -56,13 +56,13 @@ def processData(folders, vendorNames, bootstrap, includeLine, histogram, vendorT
     for i in range(0, len(folders)):
         allRankMarginCPU0[i], allLaneMarginCPU0[i], allCALaneMarginCPU0[i], allRankMarginCPU1[i], allLaneMarginCPU1[i], allCALaneMarginCPU1[i], rankVarList, caLaneVarList = readData(os.listdir(folders[i]), folders[i], vendorNames[i])
         
-    # makeGraphs(allRankMarginCPU0, rankVarList, vendorNames, includeLine, bootstrap, "CPU0 Rank Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[0])), len(allLaneMarginCPU0[0][0]))
-    # makeGraphs(allLaneMarginCPU0, rankVarList, vendorNames, includeLine, bootstrap, "CPU0 Lane Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[0])), len(allLaneMarginCPU0[0][0]))
+    makeGraphs(allRankMarginCPU0, rankVarList, vendorNames, includeLine, bootstrap, "CPU0 Rank Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[0])), len(allLaneMarginCPU0[0][0]))
+    makeGraphs(allLaneMarginCPU0, rankVarList, vendorNames, includeLine, bootstrap, "CPU0 Lane Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[0])), len(allLaneMarginCPU0[0][0]))
     makeGraphs(allCALaneMarginCPU0, caLaneVarList, vendorNames, includeLine, bootstrap, "CPU0 CA Lane Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[0])), len(allCALaneMarginCPU0[0][0]))
 
-    # makeGraphs(allRankMarginCPU1, rankVarList, vendorNames, includeLine, bootstrap, "CPU1 Rank Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[0])), len(allLaneMarginCPU0[0]))
-    # makeGraphs(allLaneMarginCPU1, rankVarList, vendorNames, includeLine, bootstrap, "CPU1 Lane Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[0])), len(allLaneMarginCPU0[0][0]))
-    # makeGraphs(allCALaneMarginCPU1, caLaneVarList, vendorNames, includeLine, bootstrap, "CPU1 CA Lane Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[0])), len(allCALaneMarginCPU0[0][0]))
+    makeGraphs(allRankMarginCPU1, rankVarList, vendorNames, includeLine, bootstrap, "CPU1 Rank Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[0])), len(allLaneMarginCPU0[0]))
+    makeGraphs(allLaneMarginCPU1, rankVarList, vendorNames, includeLine, bootstrap, "CPU1 Lane Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[0])), len(allLaneMarginCPU0[0][0]))
+    makeGraphs(allCALaneMarginCPU1, caLaneVarList, vendorNames, includeLine, bootstrap, "CPU1 CA Lane Margin", histogram, vendorTable, boxPlot, varTable, bitMarg, comparator, len(os.listdir(folders[0])), len(allCALaneMarginCPU0[0][0]))
 
     plt.close()
     print("Done")
