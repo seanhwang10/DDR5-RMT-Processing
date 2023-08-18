@@ -23,7 +23,6 @@
 # pip install scikit-learn
 # pip install openpyxl
 
-
 import os
 import numpy as np
 import matplotlib.pyplot as plt

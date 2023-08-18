@@ -39,6 +39,7 @@ def jean_analysis():
 
 
     # ---- Your code should begin here ----------------------------------------------------------- #
+    
     # create list of vendor names
     vendorNames = []
     for i in range(0, numData):
